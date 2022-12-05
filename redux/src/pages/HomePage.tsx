@@ -1,20 +1,28 @@
 import React, { useEffect, useState } from "react";
+import { useLinkClickHandler } from "react-router-dom";
+import { RepoCard } from "../components/RepoCard";
 import { useDebounce } from "../hooks/debounce";
-import { useSearchUsersQuery } from "../store/github.api";
+import { useSearchUsersQuery, useLazyGetUserReposQuery } from "../store/github.api";
 
 export function HomePage () {
   const [search, setSearch] = useState('');
   const [dropdown, setDropdown] = useState(false)
   const debounced = useDebounce(search)
   const {isLoading, isError, data} = useSearchUsersQuery(debounced, {
-    skip: debounced.length < 3
+    skip: debounced.length < 3,
+    refetchOnFocus: true
   });
+  const [fetchRepos, {isLoading: isReposLaoding, data: repos}] = useLazyGetUserReposQuery();
+  const onClickHandler = (username: string) => {
+    console.log(username)
+    fetchRepos(username)
+    setDropdown(false)
+  }
   useEffect(() => {
     setDropdown(debounced.length > 3 && data?.length! > 0)
-
   },[debounced])
   return (
-    <div className="flex justify-center pt-10 mx-auto h-screen w-screen">Home
+    <div className="flex justify-center pt-10 mx-auto h-screen w-screen">
       {isError && <p className="text-center text-red-600">Something went wrong</p>}
     
       <div className="relative w-[560px]">
@@ -23,11 +31,17 @@ export function HomePage () {
           {isLoading && <p className="text-center">Loading...</p>}
           {data?.map(user => (
             <li key={user.id}
+            onClick={() => onClickHandler(user.login)}
             className="py-2 px-4 hover:bg-gray-500 hover:text-white transition-colors cursor-pointer">
               { user.login }
             </li>
           ))}
         </ul>
+        <div className="container">
+        { isReposLaoding && <p className="text-center">Repos are loading</p>}
+        {repos?.map(repo => <RepoCard repo={repo} key={repo.id}/>)}
+      </div>
+
       </div>
     </div>
   )
