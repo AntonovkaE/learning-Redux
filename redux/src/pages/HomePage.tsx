@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useLinkClickHandler } from "react-router-dom";
 import { RepoCard } from "../components/RepoCard";
 import { useDebounce } from "../hooks/debounce";
 import {
@@ -23,7 +22,7 @@ export function HomePage() {
   };
   useEffect(() => {
     setDropdown(debounced.length > 3 && data?.length! > 0);
-  }, [debounced]);
+  }, [debounced, data]);
   return (
     <div className="flex justify-center pt-10 mx-auto h-screen w-screen">
       {isError && (
